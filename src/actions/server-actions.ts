@@ -5,11 +5,11 @@ import { redirect } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import z from "zod";
 
-import { PrismaClient } from "@/generated/prisma";
 import { getUser } from "@/lib/auth/auth-session";
+import { db } from "@/lib/db";
 
 
-const prisma = new PrismaClient();
+
 
 
 
@@ -23,7 +23,7 @@ export async function getServers() {
 
 
 
-  const servers = await prisma.server.findMany({
+  const servers = await db.server.findMany({
     where: {
       members: {
         some: {
@@ -65,7 +65,7 @@ export async function createServerAction(values: z.infer<typeof formSchema>) {
     throw new Error("Unauthorized");
   }
 
-  const server = await prisma.server.create({
+  const server = await db.server.create({
     data: {
       name,
       imageUrl,
@@ -95,7 +95,7 @@ export const getServerById = async ({ id }: { id: string }) => {
   if (!user) {
     throw new Error("Unauthorized");
   }
-  const server = await prisma.server.findFirst({
+  const server = await db.server.findFirst({
     where: {
       id,
       members: {
@@ -141,7 +141,7 @@ export async function joinServerByInvite(inviteCode: string) {
     redirect("/");
   }
 
-  const existingServer = await prisma.server.findFirst({
+  const existingServer = await db.server.findFirst({
     where: {
       inviteCode,
       members: {
@@ -158,7 +158,7 @@ export async function joinServerByInvite(inviteCode: string) {
     redirect(`/server/${existingServer.id}`);
   }
 
-  const server = await prisma.server.update({
+  const server = await db.server.update({
     where: { inviteCode },
     data: {
       members: {
@@ -189,7 +189,7 @@ export async function updateServer({ serverId, name, imageUrl }: UpdateServerInp
     throw new Error("Unauthorized");
   }
 
-  const server = await prisma.server.update({
+  const server = await db.server.update({
     where: {
       id: serverId,
       userId: user.id, // only owner can update
@@ -215,12 +215,12 @@ export async function kickMember(memberId: string, serverId: string) {
   }
 
   // ensure requester is server owner
-  const server = await prisma.server.findUnique({
+  const server = await db.server.findUnique({
     where: { id: serverId },
   });
   if (!server || server.userId !== user.id) throw new Error("Forbidden");
 
-  const updated = await prisma.server.update({
+  const updated = await db.server.update({
     where: { id: serverId },
     data: {
       members: {
@@ -244,12 +244,12 @@ export async function changeRole(
     throw new Error("Unauthorized");
   }
 
-  const server = await prisma.server.findUnique({
+  const server = await db.server.findUnique({
     where: { id: serverId },
   });
   if (!server || server.userId !== user.id) throw new Error("Forbidden");
 
-  const updated = await prisma.server.update({
+  const updated = await db.server.update({
     where: { id: serverId },
     data: {
       members: {

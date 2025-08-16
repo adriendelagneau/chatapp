@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -20,28 +21,27 @@ enum Role {
 // User & Authentication
 //
 model User {
-  id                   String   @id @default(uuid())
-  email                String   @unique
-  name                 String?
-  role                 Role     @default(USER)
-  emailVerified        Boolean
-  image                String?
-  isOnline             Boolean   @default(false) // presence tracking
-  lastActive           DateTime? @default(now()) // presence tracking
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  role          Role      @default(USER)
+  emailVerified Boolean
+  image         String?
+  isOnline      Boolean   @default(false) // presence tracking
+  lastActive    DateTime? @default(now()) // presence tracking
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  sessions     Session[]
-  accounts     Account[]
-
-
-  @@map("user")
-  @@index([isOnline])
-  Server Server[]
+  sessions Session[]
+  accounts Account[]
+  Server   Server[]
   // Member Member[]
   // Channel Channel[]
-  Member Member[]
-  Channel Channel[]
+  Member   Member[]
+  Channel  Channel[]
+
+  @@index([isOnline])
+  @@map("user")
 }
 
 model Session {
@@ -56,8 +56,8 @@ model Session {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("session")
   @@index([userId])
+  @@map("session")
 }
 
 model Account {
@@ -77,8 +77,8 @@ model Account {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("account")
   @@index([userId])
+  @@map("account")
 }
 
 model Verification {
@@ -92,7 +92,6 @@ model Verification {
   @@map("verification")
 }
 
-
 //
 model Server {
   id         String @id @default(uuid())
@@ -103,13 +102,12 @@ model Server {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   members  Member[]
   channels Channel[]
+
   @@index([userId])
 }
 
@@ -131,7 +129,6 @@ model Member {
 
   // messages Message[]
   // directMessages DirectMessage[]
-
 
   // conversationsInitiated Conversation[] @relation("MemberOne")
   // conversationsReceived  Conversation[] @relation("MemberTwo")
@@ -224,4 +221,3 @@ model Channel {
 //   @@index([memberId])
 //   @@index([conversationId])
 // }
-

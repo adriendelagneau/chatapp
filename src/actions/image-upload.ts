@@ -15,7 +15,7 @@ export const uploadImage = async (formData: FormData) => {
         fileName: file.name,
         folder: "/posts",
       },
-      function (error, result) {
+      (error, result) => {
         if (error) {
           reject({ success: false, error: error.message });
         } else {

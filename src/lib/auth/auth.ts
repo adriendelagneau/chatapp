@@ -4,12 +4,11 @@ import { nextCookies } from "better-auth/next-js";
 import { magicLink, captcha } from "better-auth/plugins";
 
 import { sendEmail } from "@/actions/email-actions";
-import { PrismaClient } from "@/generated/prisma";
 
-const prisma = new PrismaClient();
+import { db } from "../db";
 
 export const auth = betterAuth({
-  database: prismaAdapter(prisma, {
+  database: prismaAdapter(db, {
     provider: "postgresql",
   }),
   plugins: [

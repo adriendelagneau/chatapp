@@ -2,9 +2,8 @@
 import { PlusIcon } from "lucide-react";
 import React from "react";
 
+import ActionTooltip from "@/components/action-tooltip";
 import { useModal } from "@/hooks/use-modal-store";
-
-import ActionTooltip from "../action-tooltip";
 
 const CreateServerButton = () => {
   const { onOpen } = useModal();

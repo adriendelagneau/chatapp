@@ -8,10 +8,7 @@ import * as z from "zod";
 
 import { uploadImage } from "@/actions/image-upload";
 import { createServerAction } from "@/actions/server-actions";
-import { useModal } from "@/hooks/use-modal-store";
-import { FormSchema } from "@/lib/schemas";
-
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +16,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -27,8 +24,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../ui/form";
-import { Input } from "../ui/input";
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useModal } from "@/hooks/use-modal-store";
+import { FormSchema } from "@/lib/schemas";
+
 export const CreateServerModal = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -76,7 +76,7 @@ export const CreateServerModal = () => {
     formData.append("file", imageFile);
 
     try {
-const response = await uploadImage(formData) as { url: string };
+      const response = (await uploadImage(formData)) as { url: string };
       form.setValue("imageUrl", response.url);
     } catch (error) {
       console.error("Upload failed:", error);

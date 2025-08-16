@@ -1,9 +1,9 @@
 "use server";
 
+import { ChannelType } from "@prisma/client";
 import { revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { ChannelType } from "@/generated";
 import { getUser } from "@/lib/auth/auth-session";
 import { db } from "@/lib/db";
 

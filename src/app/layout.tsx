@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SignInModal } from "@/components/auth/log-in/sign-in-modal";
 import NavigationSidebar from "@/components/navigation/navigation-sidebar";
+import { ModalProvider } from "@/components/providers/modal-provider";
 import { TanstackProvider } from "@/components/providers/tanstackprovider";
 import { ThemeProvider } from "@/components/providers/themes-provider";
 
@@ -40,6 +41,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <TanstackProvider>
+              <ModalProvider />
               <div className="h-full">
                 <SignInModal />
                 <div className="fixed inset-y-0 z-30 hidden h-full w-[72px] flex-col md:flex">

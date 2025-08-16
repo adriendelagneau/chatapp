@@ -3,7 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
 import { SignInModal } from "@/components/auth/log-in/sign-in-modal";
+import NavigationSidebar from "@/components/navigation/navigation-sidebar";
 import { TanstackProvider } from "@/components/providers/tanstackprovider";
+import { ThemeProvider } from "@/components/providers/themes-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,15 +28,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <div className="h-full">
-          <TanstackProvider>
-            <SignInModal />
-            {children}
-          </TanstackProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <TanstackProvider>
+              <div className="h-full">
+                <SignInModal />
+                <div className="fixed inset-y-0 z-30 hidden h-full w-[72px] flex-col md:flex">
+                  <NavigationSidebar />
+                </div>
+                <main className="h-full md:pl-[72px]">{children}</main>
+              </div>
+            </TanstackProvider>
+          </ThemeProvider>
         </div>
       </body>
     </html>

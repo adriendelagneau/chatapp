@@ -5,13 +5,9 @@ import { redirect } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import z from "zod";
 
+import { ChannelType } from "@/generated";
 import { getUser } from "@/lib/auth/auth-session";
 import { db } from "@/lib/db";
-
-
-
-
-
 
 
 export async function getServers() {
@@ -44,8 +40,6 @@ export async function getServers() {
   });
   return servers;
 }
-
-
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Server name is required" }),
@@ -119,16 +113,7 @@ export const getServerById = async ({ id }: { id: string }) => {
 
   return server;
 
-
-  return server;
 };
-
-
-
-
-
-
-
 
 export async function joinServerByInvite(inviteCode: string) {
   const profile = await getUser();
@@ -264,4 +249,77 @@ export async function changeRole(
 
   revalidateTag(`server-${serverId}`);
   return updated;
+}
+
+
+export async function getServerOrRedirect(serverId: string) {
+  const user = await getUser();
+
+  if (!user) {
+    redirect("/"); // not logged in
+  }
+
+  const server = await db.server.findUnique({
+    where: {
+      id: serverId,
+      members: {
+        some: {
+          userId: user.id,
+        },
+      },
+    },
+  });
+
+  if (!server) {
+    redirect("/");
+  }
+
+  return { server, user };
+}
+
+
+export async function getServerSidebarData(serverId: string) {
+  const user = await getUser();
+
+  if (!user) {
+    redirect("/");
+  }
+
+  const server = await db.server.findUnique({
+    where: { id: serverId },
+    include: {
+      channels: { orderBy: { createdAt: "asc" } },
+      members: {
+        include: { user: true },
+        orderBy: { role: "asc" },
+      },
+    },
+  });
+
+  if (!server) {
+    redirect("/");
+  }
+
+  const textChannels = server.channels.filter(
+    (c) => c.type === ChannelType.TEXT
+  );
+  const audioChannels = server.channels.filter(
+    (c) => c.type === ChannelType.AUDIO
+  );
+  const videoChannels = server.channels.filter(
+    (c) => c.type === ChannelType.VIDEO
+  );
+  const members = server.members.filter((m) => m.userId !== user.id);
+
+  const role = server.members.find((m) => m.userId === user.id)?.role;
+
+  return {
+    server,
+    role,
+    user,
+    textChannels,
+    audioChannels,
+    videoChannels,
+    members,
+  };
 }

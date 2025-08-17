@@ -5,11 +5,10 @@ import {
   ShieldCheckIcon,
   VideoIcon,
 } from "lucide-react";
-import { redirect } from "next/navigation";
 import React from "react";
 
-import { ChannelType, MemberRole, PrismaClient } from "@/generated";
-import { getUser } from "@/lib/auth/auth-session";
+import { getServerSidebarData } from "@/actions/server-actions";
+import { ChannelType, MemberRole } from "@/generated";
 
 import ServerChannel from "./server-channel";
 import ServerHeader from "./server-header";
@@ -18,8 +17,6 @@ import ServerSearch from "./server-search";
 import ServerSection from "./server-section";
 import { ScrollArea } from "../ui/scroll-area";
 import { Separator } from "../ui/separator";
-
-const prisma = new PrismaClient();
 
 interface ServerSidebarProps {
   serverId: string;
@@ -42,52 +39,11 @@ const roleIconMap = {
 };
 
 const ServerSidebar = async ({ serverId }: ServerSidebarProps) => {
-  const user = await getUser();
-
-  const server = await prisma.server.findUnique({
-    where: {
-      id: serverId,
-    },
-    include: {
-      channels: {
-        orderBy: {
-          createdAt: "asc",
-        },
-      },
-      members: {
-        include: {
-          user: true,
-        },
-        orderBy: {
-          role: "asc",
-        },
-      },
-    },
-  });
-
-  const textChannels = server?.channels.filter(
-    (channel) => channel.type === ChannelType.TEXT
-  );
-  const audioChannels = server?.channels.filter(
-    (channel) => channel.type === ChannelType.AUDIO
-  );
-  const videoChannels = server?.channels.filter(
-    (channel) => channel.type === ChannelType.VIDEO
-  );
-  const members = server?.members.filter(
-    (member) => member.userId !== user?.id
-  );
-
-  if (!server) {
-    return redirect("/");
-  }
-
-  const role = server.members.find(
-    (member) => member.userId === user?.id
-  )?.role;
+  const { server, role, textChannels, audioChannels, videoChannels, members } =
+    await getServerSidebarData(serverId);
 
   return (
-    <div className="text-primary flex h-full w-full flex-col bg-secondary-foreground">
+    <div className="text-primary bg-secondary-foreground flex h-full w-full flex-col">
       <ServerHeader server={server} role={role} />
       <ScrollArea className="flex-1 px-3">
         <div className="mt-2">
@@ -96,36 +52,36 @@ const ServerSidebar = async ({ serverId }: ServerSidebarProps) => {
               {
                 label: "Text Channels",
                 type: "channel",
-                data: textChannels?.map((channel) => ({
+                data: textChannels.map((channel) => ({
                   id: channel.id,
-                  name: channel.name,
+                  name: channel.name ?? "Unnamed Channel",
                   icon: iconMap[channel.type],
                 })),
               },
               {
                 label: "Voice Channels",
                 type: "channel",
-                data: audioChannels?.map((channel) => ({
+                data: audioChannels.map((channel) => ({
                   id: channel.id,
-                  name: channel.name,
+                  name: channel.name ?? "Unnamed Channel",
                   icon: iconMap[channel.type],
                 })),
               },
               {
                 label: "Video Channels",
                 type: "channel",
-                data: videoChannels?.map((channel) => ({
+                data: videoChannels.map((channel) => ({
                   id: channel.id,
-                  name: channel.name,
+                  name: channel.name ?? "Unnamed Channel",
                   icon: iconMap[channel.type],
                 })),
               },
               {
                 label: "Members",
                 type: "member",
-                data: members?.map((member) => ({
+                data: members.map((member) => ({
                   id: member.id,
-                name: member.user.name ?? "Unknown User",  // ensure string
+                  name: member.user.name ?? "Unknown User",
                   icon: roleIconMap[member.role],
                 })),
               },
@@ -133,7 +89,8 @@ const ServerSidebar = async ({ serverId }: ServerSidebarProps) => {
           />
         </div>
         <Separator className="my-2 rounded-md bg-zinc-200 dark:bg-zinc-700" />
-        {!!textChannels?.length && (
+
+        {!!textChannels.length && (
           <div className="mb-2">
             <ServerSection
               sectionType="channels"
@@ -151,7 +108,8 @@ const ServerSidebar = async ({ serverId }: ServerSidebarProps) => {
             ))}
           </div>
         )}
-        {!!audioChannels?.length && (
+
+        {!!audioChannels.length && (
           <div className="mb-2">
             <ServerSection
               sectionType="channels"
@@ -169,7 +127,8 @@ const ServerSidebar = async ({ serverId }: ServerSidebarProps) => {
             ))}
           </div>
         )}
-        {!!videoChannels?.length && (
+
+        {!!videoChannels.length && (
           <div className="mb-2">
             <ServerSection
               sectionType="channels"
@@ -188,7 +147,7 @@ const ServerSidebar = async ({ serverId }: ServerSidebarProps) => {
           </div>
         )}
 
-        {!!members?.length && (
+        {!!members.length && (
           <div className="mb-2">
             <ServerSection
               sectionType="members"
@@ -196,7 +155,7 @@ const ServerSidebar = async ({ serverId }: ServerSidebarProps) => {
               label="Members"
               server={server}
             />
-            {members?.map((member) => (
+            {members.map((member) => (
               <ServerMember key={member.id} member={member} server={server} />
             ))}
           </div>

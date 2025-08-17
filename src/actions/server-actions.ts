@@ -139,8 +139,8 @@ export async function joinServerByInvite(inviteCode: string) {
 
   if (existingServer) {
     // 🔄 refresh caches that depend on "servers"
-    revalidateTag("servers");
     redirect(`/server/${existingServer.id}`);
+    // revalidateTag("servers");
   }
 
   const server = await db.server.update({
@@ -154,7 +154,7 @@ export async function joinServerByInvite(inviteCode: string) {
 
   if (server) {
     // 🔄 refresh caches that depend on "servers"
-    revalidateTag("servers");
+    // revalidateTag("servers");
     redirect(`/server/${server.id}`);
   }
 

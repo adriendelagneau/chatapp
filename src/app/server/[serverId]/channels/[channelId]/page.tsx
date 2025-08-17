@@ -1,5 +1,5 @@
 import { getChannelWithMember } from "@/actions/channel-actions";
-
+import ChatHeader from "@/components/chat/chat-header";
 
 interface ChannelIdPageProps {
   params: Promise<{
@@ -15,7 +15,13 @@ const ChannelIdPage = async ({ params }: ChannelIdPageProps) => {
   const { channel, member } = await getChannelWithMember(serverId, channelId);
 
   return (
-    <div className="flex h-full flex-col">ok</div>
+    <div className="flex h-full flex-col">
+      <ChatHeader
+        name={channel.name}
+        serverId={channel.serverId}
+        type="channel"
+      />
+    </div>
   );
 };
 

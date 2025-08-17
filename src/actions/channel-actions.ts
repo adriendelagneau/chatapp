@@ -89,7 +89,7 @@ export async function deleteChannelAction(channelId: string, serverId: string) {
     }
 
     // enforce permissions
-      await db.server.update({
+    await db.server.update({
       where: {
         id: serverId,
         members: {
@@ -129,4 +129,47 @@ export async function deleteChannelAction(channelId: string, serverId: string) {
     console.error("[deleteChannelAction]", error);
     throw new Error("Failed to delete channel");
   }
+}
+
+
+interface EditChannelInput {
+  channelId: string
+  serverId: string
+  name: string
+  type: ChannelType
+}
+
+export async function editChannelAction({ channelId, serverId, name, type }: EditChannelInput) {
+  const user = await getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  if (name === "general") throw new Error("Channel name cannot be 'general'");
+
+  // update the channel
+  const server = await db.server.update({
+    where: {
+      id: serverId,
+      members: {
+        some: {
+          userId: user.id,
+          role: {
+            in: [MemberRole.ADMIN, MemberRole.MODERATOR]
+          }
+        }
+      }
+    },
+    data: {
+      channels: {
+        update: {
+          where: {
+            id: channelId,
+            NOT: { name: "general" }
+          },
+          data: { name, type }
+        }
+      }
+    }
+  });
+
+  return server;
 }

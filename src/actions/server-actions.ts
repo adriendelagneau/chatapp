@@ -17,8 +17,6 @@ export async function getServers() {
     return [];
   }
 
-
-
   const servers = await db.server.findMany({
     where: {
       members: {
@@ -345,4 +343,34 @@ export async function deleteServer(serverId: string) {
     console.error("Failed to delete server:", error);
     throw new Error("Something went wrong while deleting the server.");
   }
+}
+
+
+
+
+interface LeaveServerInput {
+  serverId: string;
+}
+
+export async function leaveServerAction({ serverId }: LeaveServerInput) {
+  const user = await getUser();
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+  if (!serverId) throw new Error("Server ID missing");
+
+  const server = await db.server.update({
+    where: {
+      id: serverId,
+      userId: { not: user.id },
+      members: { some: { userId: user.id } }
+    },
+    data: {
+      members: {
+        deleteMany: { userId: user.id }
+      }
+    }
+  });
+
+  return server;
 }

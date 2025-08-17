@@ -40,6 +40,7 @@ const ServerChannel = ({ channel, server, role }: ServerChannelProps) => {
   };
 
   const onAction = (e: React.MouseEvent, action: ModalType) => {
+   
     e.stopPropagation();
     onOpen(action, { channel, server });
   };

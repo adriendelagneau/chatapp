@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -33,6 +34,7 @@ export const CreateServerModal = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const router = useRouter();
 
   const { isOpen, onClose, type } = useModal();
 
@@ -50,10 +52,13 @@ export const CreateServerModal = () => {
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     try {
-      await createServerAction(values);
+      const { serverId, channelId } = await createServerAction(values);
+
       form.reset();
-      // router.refresh();
       onClose();
+
+      // Navigate client-side
+      router.push(`/server/${serverId}/channels/${channelId}`);
     } catch (err) {
       console.error("Failed to create server:", err);
     }

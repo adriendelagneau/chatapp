@@ -49,6 +49,7 @@ const roleIconMap = {
 };
 
 export const MembersModal = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { onOpen, isOpen, onClose, type, data } = useModal();
   const [loadingId, setLoadingId] = useState("");
 

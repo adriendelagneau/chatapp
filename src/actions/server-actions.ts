@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import z from "zod";
@@ -46,6 +46,7 @@ const formSchema = z.object({
   imageUrl: z.url({ message: "A valid server image is required" }),
 });
 
+
 export async function createServerAction(values: z.infer<typeof formSchema>) {
   const parsed = formSchema.safeParse(values);
   if (!parsed.success) {
@@ -76,12 +77,18 @@ export async function createServerAction(values: z.infer<typeof formSchema>) {
         ],
       },
     },
+    include: {
+      channels: true, // so we can grab the first channel
+    },
   });
 
   // Invalidate server list cache
   revalidateTag("servers");
 
-  return server;
+  return {
+    serverId: server.id,
+    channelId: server.channels[0].id,
+  };
 }
 
 export const getServerById = async ({ id }: { id: string }) => {
@@ -322,4 +329,20 @@ export async function getServerSidebarData(serverId: string) {
     videoChannels,
     members,
   };
+}
+
+export async function deleteServer(serverId: string) {
+  try {
+    // Example: Delete from DB
+     await db.server.delete({ where: { id: serverId } });
+
+    // Revalidate pages that depend on servers
+     revalidatePath("/");
+
+    // Redirect after deletion
+
+  } catch (error) {
+    console.error("Failed to delete server:", error);
+    throw new Error("Something went wrong while deleting the server.");
+  }
 }

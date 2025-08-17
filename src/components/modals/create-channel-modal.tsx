@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -52,6 +52,8 @@ export const CreateChannelModal = () => {
   const isModalOpen = isOpen && type === "createChannel";
   const { channelType } = data;
 
+  const router = useRouter();
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -67,26 +69,31 @@ export const CreateChannelModal = () => {
 
   const isLoading = form.formState.isSubmitting;
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      // call server action directly
-      const serverIdParam = params?.serverId;
-      const serverId = Array.isArray(serverIdParam)
-        ? serverIdParam[0]
-        : serverIdParam;
-      await createChannel({
-        serverId: serverId!, // now guaranteed to be string
-        name: values.name,
-        type: values.type,
-      });
-      form.reset();
+const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  try {
+    // get serverId from params
+    const serverIdParam = params?.serverId;
+    const serverId = Array.isArray(serverIdParam) ? serverIdParam[0] : serverIdParam;
 
-      onClose();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    if (!serverId) throw new Error("Server ID missing");
 
+    // call server action directly
+    const { channelId } = await createChannel({
+      serverId,
+      name: values.name,
+      type: values.type,
+    });
+
+    form.reset();
+    onClose();
+
+    // navigate to the newly created channel
+    router.push(`/server/${serverId}/channels/${channelId}`);
+    router.refresh();
+  } catch (err) {
+    console.error("Failed to create channel:", err);
+  }
+};
   const handleClose = () => {
     form.reset();
     onClose();

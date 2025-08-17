@@ -1,11 +1,11 @@
 "use server";
 
 
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 
-import { ChannelType } from "@/generated";
+import { ChannelType, MemberRole } from "@/generated";
 import { getUser } from "@/lib/auth/auth-session";
 import { db } from "@/lib/db";
 
@@ -41,10 +41,14 @@ export async function createChannel({ serverId, name, type }: CreateChannelInput
     },
   });
 
+  // invalidate channels cache
   revalidateTag("channels");
-  return channel;
-}
 
+  return {
+    serverId,
+    channelId: channel.id,
+  };
+}
 
 export async function getChannelWithMember(serverId: string, channelId: string) {
   const profile = await getUser(); // or however you get the logged-in user
@@ -74,3 +78,55 @@ export async function getChannelWithMember(serverId: string, channelId: string) 
 
   return { channel, member };
 };
+
+export async function deleteChannelAction(channelId: string, serverId: string) {
+  const user = await getUser();
+  if (!user) throw new Error("Unauthorized");
+  try {
+
+    if (!serverId) {
+      throw new Error("Server ID missing");
+    }
+
+    // enforce permissions
+      await db.server.update({
+      where: {
+        id: serverId,
+        members: {
+          some: {
+            userId: user.id,
+            role: { in: [MemberRole.ADMIN, MemberRole.MODERATOR] },
+          },
+        },
+      },
+      data: {
+        channels: {
+          delete: {
+            id: channelId,
+            name: { not: "general" },
+          },
+        },
+      },
+    });
+
+    // grab a channel to redirect into
+    const remainingChannels = await db.channel.findMany({
+      where: { serverId },
+      orderBy: { createdAt: "asc" }, // so "general" comes first
+    });
+
+    if (!remainingChannels.length) {
+      throw new Error("No channels remain in this server.");
+    }
+
+    const nextChannel = remainingChannels[0];
+
+    // revalidate server page
+    revalidatePath(`/server/${serverId}`);
+
+    return { serverId, channelId: nextChannel.id };
+  } catch (error) {
+    console.error("[deleteChannelAction]", error);
+    throw new Error("Failed to delete channel");
+  }
+}

@@ -12,7 +12,7 @@ const ChannelIdPage = async ({ params }: ChannelIdPageProps) => {
   const { serverId, channelId } = await params;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { channel, member } = await getChannelWithMember(serverId, channelId);
+  // const { channel, member } = await getChannelWithMember(serverId, channelId);
 
   return (
     <div className="flex h-full flex-col">ok</div>
